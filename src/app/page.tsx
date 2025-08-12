@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import {
   Connection,
@@ -7,12 +8,8 @@ import {
   PublicKey,
   clusterApiUrl,
 } from "@solana/web3.js";
-import { useWallet, WalletProvider } from "@solana/wallet-adapter-react";
-import {
-  WalletModalProvider,
-  WalletMultiButton,
-} from "@solana/wallet-adapter-react-ui";
-import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 export default function DepositSigner() {
   const wallet = useWallet();
@@ -101,6 +98,7 @@ export default function DepositSigner() {
 
       const depositIx = new TransactionInstruction({
         programId: new PublicKey(instructions[0].programId),
+        /* eslint-disable @typescript-eslint/no-explicit-any */
         keys: instructions[0].keys.map((key: any) => ({
           pubkey: new PublicKey(key.pubkey),
           isSigner: key.isSigner,
@@ -252,15 +250,5 @@ export default function DepositSigner() {
         {status}
       </p>
     </div>
-  );
-}
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  const wallets = [new PhantomWalletAdapter()];
-
-  return (
-    <WalletProvider wallets={wallets} autoConnect>
-      <WalletModalProvider>{children}</WalletModalProvider>
-    </WalletProvider>
   );
 }
