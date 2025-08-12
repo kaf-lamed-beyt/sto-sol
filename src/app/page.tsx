@@ -74,7 +74,7 @@ export default function DepositSigner() {
       formData.append("duration", String(durationDays * 86400));
       formData.append("publicKey", wallet.publicKey.toBase58());
 
-      const res = await fetch("http://localhost:5040/api/user/uploadFile", {
+      const res = await fetch("https://storacha-solana-sdk-bshc.onrender.com/api/user/uploadFile", {
         method: "POST",
         body: formData,
       });
@@ -192,8 +192,7 @@ export default function DepositSigner() {
         <input
           id="duration-input"
           type="number"
-          min="1"
-          value={durationDays}
+          placeholder={durationDays.toString()}
           onChange={handleDurationChange}
           style={{ padding: "8px" }}
         />
@@ -203,7 +202,7 @@ export default function DepositSigner() {
         <div
           style={{
             padding: "12px",
-            backgroundColor: "#f5f5f5",
+            backgroundColor: "#161315",
             borderRadius: "8px",
             width: "100%",
             fontSize: "14px",
