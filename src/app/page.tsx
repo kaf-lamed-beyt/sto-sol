@@ -10,6 +10,8 @@ import {
 } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useAuthenticator } from "@storacha/ui-react";
+import { Login } from "@/components/login";
 
 export default function DepositSigner() {
   const wallet = useWallet();
@@ -17,6 +19,11 @@ export default function DepositSigner() {
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [durationDays, setDurationDays] = useState<number>(7);
+
+  const [{ accounts, client }] = useAuthenticator();
+  const authenticated = accounts.length > 0;
+
+  if (!client) return "loading...";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -71,7 +78,7 @@ export default function DepositSigner() {
       formData.append("duration", String(durationDays * 86400));
       formData.append("publicKey", wallet.publicKey.toBase58());
 
-      const res = await fetch("https://storacha-solana-sdk-bshc.onrender.com/api/user/uploadFile", {
+      const res = await fetch("http://localhost:5040/api/user/uploadFile", {
         method: "POST",
         body: formData,
       });
@@ -146,109 +153,118 @@ export default function DepositSigner() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "1em",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "50vh",
-        maxWidth: "600px",
-        margin: "0 auto",
-        padding: "20px",
-      }}
-    >
-      <WalletMultiButton />
-
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5em",
-          width: "100%",
-        }}
-      >
-        <label htmlFor="file-input">Select File:</label>
-        <input
-          id="file-input"
-          type="file"
-          onChange={handleFileChange}
-          style={{ padding: "8px" }}
-        />
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5em",
-          width: "100%",
-        }}
-      >
-        <label htmlFor="duration-input">Storage Duration (days):</label>
-        <input
-          id="duration-input"
-          type="number"
-          placeholder={durationDays.toString()}
-          onChange={handleDurationChange}
-          style={{ padding: "8px" }}
-        />
-      </div>
-
-      {file && (
+    <>
+      {authenticated ? (
         <div
           style={{
-            padding: "12px",
-            backgroundColor: "#161315",
-            borderRadius: "8px",
-            width: "100%",
-            fontSize: "14px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1em",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "50vh",
+            maxWidth: "600px",
+            margin: "0 auto",
+            padding: "20px",
           }}
         >
-          <p>
-            <strong>File:</strong> {file.name} ({Math.round(file.size / 1024)}
-            KB)
-          </p>
-          <p>
-            <strong>Duration:</strong> {durationDays} days
-          </p>
-          {estimatedCost && (
-            <p>
-              <strong>Estimated Cost:</strong> {estimatedCost.sol.toFixed(4)}{" "}
-              SOL
-            </p>
+          <WalletMultiButton />
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5em",
+              width: "100%",
+            }}
+          >
+            <label htmlFor="file-input">Select File:</label>
+            <input
+              id="file-input"
+              type="file"
+              onChange={handleFileChange}
+              style={{ padding: "8px" }}
+            />
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5em",
+              width: "100%",
+            }}
+          >
+            <label htmlFor="duration-input">Storage Duration (days):</label>
+            <input
+              id="duration-input"
+              type="number"
+              placeholder={durationDays.toString()}
+              onChange={handleDurationChange}
+              style={{ padding: "8px" }}
+            />
+          </div>
+
+          {file && (
+            <div
+              style={{
+                padding: "12px",
+                backgroundColor: "#161315",
+                borderRadius: "8px",
+                width: "100%",
+                fontSize: "14px",
+              }}
+            >
+              <p>
+                <strong>File:</strong> {file.name} (
+                {Math.round(file.size / 1024)}
+                KB)
+              </p>
+              <p>
+                <strong>Duration:</strong> {durationDays} days
+              </p>
+              {estimatedCost && (
+                <p>
+                  <strong>Estimated Cost:</strong>{" "}
+                  {estimatedCost.sol.toFixed(4)} SOL
+                </p>
+              )}
+            </div>
           )}
+
+          <button
+            onClick={handleDeposit}
+            disabled={!wallet.publicKey || isLoading || !file}
+            style={{
+              padding: "12px 24px",
+              fontSize: "16px",
+              backgroundColor:
+                !wallet.publicKey || isLoading || !file ? "#ccc" : "#007bff",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor:
+                !wallet.publicKey || isLoading || !file
+                  ? "not-allowed"
+                  : "pointer",
+            }}
+          >
+            {isLoading ? "Processing..." : "Submit Deposit"}
+          </button>
+
+          <p
+            style={{
+              maxWidth: "100%",
+              wordBreak: "break-all",
+              textAlign: "center",
+            }}
+          >
+            {status}
+          </p>
         </div>
+      ) : (
+        <Login />
       )}
-
-      <button
-        onClick={handleDeposit}
-        disabled={!wallet.publicKey || isLoading || !file}
-        style={{
-          padding: "12px 24px",
-          fontSize: "16px",
-          backgroundColor:
-            !wallet.publicKey || isLoading || !file ? "#ccc" : "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "8px",
-          cursor:
-            !wallet.publicKey || isLoading || !file ? "not-allowed" : "pointer",
-        }}
-      >
-        {isLoading ? "Processing..." : "Submit Deposit"}
-      </button>
-
-      <p
-        style={{
-          maxWidth: "100%",
-          wordBreak: "break-all",
-          textAlign: "center",
-        }}
-      >
-        {status}
-      </p>
-    </div>
+    </>
   );
 }
